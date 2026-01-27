@@ -83,7 +83,8 @@ echo "Running tests..."
 echo -e "${GREEN}===================================${NC}"
 
 # Run the tests
-./vectorAdd_sycl_test --gtest_color=yes
+cd "$SCRIPT_DIR"
+$BUILD_DIR/vectorAdd_sycl_test --gtest_color=yes
 TEST_EXIT_CODE=$?
 
 echo ""
