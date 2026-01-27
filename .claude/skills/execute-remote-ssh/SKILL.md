@@ -11,10 +11,14 @@ Executes commands on remote GPU servers via SSH with file transfer and result co
 
 This skill manages secure SSH connections to remote GPU servers, executes build and test commands, transfers files, and collects execution results. Essential for Phase 6 validation where CUDA and SYCL kernels run on different servers.
 
+
+## Dependencies
+- paramiko: For SSH connections and file transfers.
+
 ## Usage
 
 ```bash
-python execute_remote_ssh.py <action> [options]
+python execute-remote-ssh.py <action> [options]
 ```
 
 ### Actions
@@ -43,20 +47,20 @@ python execute_remote_ssh.py <action> [options]
 
 ```bash
 # Test connection
-python execute_remote_ssh.py connect \
+python execute-remote-ssh.py connect \
     --host gpu-server.example.com \
     --user username \
     --key ~/.ssh/id_rsa
 
 # Execute command
-python execute_remote_ssh.py execute \
+python execute-remote-ssh.py execute \
     --host gpu-server.example.com \
     --user username \
     --key ~/.ssh/id_rsa \
     --command "nvidia-smi"
 
 # Upload project
-python execute_remote_ssh.py upload \
+python execute-remote-ssh.py upload \
     --host gpu-server.example.com \
     --user username \
     --key ~/.ssh/id_rsa \
@@ -64,7 +68,7 @@ python execute_remote_ssh.py upload \
     --destination ~/remote-workspace/cuda-project
 
 # Run tests
-python execute_remote_ssh.py run-tests \
+python execute-remote-ssh.py run-tests \
     --host gpu-server.example.com \
     --user username \
     --key ~/.ssh/id_rsa \
@@ -72,7 +76,7 @@ python execute_remote_ssh.py run-tests \
     --command "./cuda_tests --gtest_output=json:results.json"
 
 # Download results
-python execute_remote_ssh.py download \
+python execute-remote-ssh.py download \
     --host gpu-server.example.com \
     --user username \
     --key ~/.ssh/id_rsa \
@@ -84,7 +88,7 @@ python execute_remote_ssh.py download \
 
 ```json
 {
-  "nvidia_server": {
+  "gpu_server": {
     "host": "gpu1.example.com",
     "user": "username",
     "key_file": "~/.ssh/id_rsa",
@@ -94,7 +98,7 @@ python execute_remote_ssh.py download \
     "cuda_arch": "80,86",
     "gpu_id": 0
   },
-  "intel_server": {
+  "intel_gpu_server": {
     "host": "gpu2.example.com",
     "user": "username",
     "key_file": "~/.ssh/id_rsa",

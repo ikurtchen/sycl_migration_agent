@@ -285,6 +285,7 @@ def cuda_workflow(config: Dict[str, Any]) -> Dict[str, Any]:
     """Execute CUDA build-test-download workflow."""
     executor = RemoteExecutor(
         host=config["host"],
+        port=config.get("port", 22),
         user=config["user"],
         key_file=config.get("key_file"),
         password=config.get("password")
@@ -368,6 +369,7 @@ def sycl_workflow(config: Dict[str, Any]) -> Dict[str, Any]:
     """Execute SYCL build-test-download workflow."""
     executor = RemoteExecutor(
         host=config["host"],
+        port=config.get("port", 22),
         user=config["user"],
         key_file=config.get("key_file"),
         password=config.get("password")
@@ -540,11 +542,11 @@ if __name__ == "__main__":
         print(json.dumps(result, indent=2))
 
     elif args.action == "cuda-workflow":
-        workflow_result = cuda_workflow(config)
+        workflow_result = cuda_workflow(config['gpu_server'])
         print(json.dumps(workflow_result, indent=2))
 
     elif args.action == "sycl-workflow":
-        workflow_result = sycl_workflow(config)
+        workflow_result = sycl_workflow(config['intel_gpu_server'])
         print(json.dumps(workflow_result, indent=2))
 
     if args.action in ["connect", "execute", "upload", "download"]:

@@ -14,6 +14,7 @@ Generate CMakeLists.txt files for CUDA and SYCL projects with proper:
 - Dependency management
 - Test framework integration
 - Installation rules
+Do not build or run, just generate the CMake files and scripts. We'll run it using @remote-executor.
 
 ## CUDA CMakeLists.txt Template
 

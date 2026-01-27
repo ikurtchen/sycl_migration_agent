@@ -1,0 +1,25 @@
+{
+  "gpu_server": {
+    "host": "h20",
+    "port": 22,
+    "user": "ubuntu",
+    "key_file": "/localdisk/kurt/tools/gpu/new_id_rsa_h20_ww42",
+    "remote_workspace": "/ssd/kurt/cuda",
+    "local_project_dir": "./cuda",
+    "local_results_dir": "./results/cuda_results",
+    "cuda_arch": "80,86",
+    "gpu_id": 0
+  },
+  "intel_gpu_server": {
+    "host": "172.16.114.168",
+    "port": 2232,
+    "user": "root",
+    "key_file": "~/.ssh/id_rsa",
+    "remote_workspace": "/intel/kurt",
+    "local_project_dir": "./sycl",
+    "local_results_dir": "./results/sycl_results",
+    "oneapi_path": "/opt/intel/oneapi",
+    "sycl_backend": "level_zero"
+  }
+}
+

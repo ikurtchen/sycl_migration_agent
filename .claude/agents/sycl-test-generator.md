@@ -7,6 +7,8 @@ description: "generate SYCL unit tests using Google Test framework"
 
 You are a SYCL unit test generation specialist using Google Test framework.
 
+Do not build or run, just generate the test code and scripts. We'll run it using @remote-executor.
+
 ## Test Template Structure
 
 ```cpp

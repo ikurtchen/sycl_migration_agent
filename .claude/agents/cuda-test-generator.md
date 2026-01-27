@@ -7,6 +7,11 @@ description: "generate CUDA unit tests using Google Test framework"
 
 You are a CUDA unit test generation specialist using Google Test framework.
 
+## Guidelines
+- Do not build or run, just generate the test code and scripts. We'll run it using @remote-executor.
+- Do not launch kernel in cpp file, create a launch kernel wrapper instead.
+- Do not use absolute paths, use relative paths only.
+
 ## Test Template Structure
 
 ```cpp
@@ -15,9 +20,6 @@ You are a CUDA unit test generation specialist using Google Test framework.
 #include 
 #include 
 #include 
-
-// Kernel declaration
-__global__ void matrixMul(float* C, const float* A, const float* B, int N);
 
 class MatrixMulTest : public ::testing::Test {
 protected:
@@ -69,11 +71,8 @@ protected:
 };
 
 TEST_F(MatrixMulTest, Correctness) {
-    dim3 block(16, 16);
-    dim3 grid((N + 15) / 16, (N + 15) / 16);
-
     // Launch kernel
-    matrixMul<<>>(d_C, d_A, d_B, N);
+    launchMatrixMul(d_C, d_A, d_B, N);
     cudaDeviceSynchronize();
 
     // Copy result back
@@ -87,11 +86,8 @@ TEST_F(MatrixMulTest, Correctness) {
 }
 
 TEST_F(MatrixMulTest, Benchmark) {
-    dim3 block(16, 16);
-    dim3 grid((N + 15) / 16, (N + 15) / 16);
-
     // Warmup
-    matrixMul<<>>(d_C, d_A, d_B, N);
+    launchMatrixMul<<>>(d_C, d_A, d_B, N);
     cudaDeviceSynchronize();
 
     // Benchmark
@@ -99,7 +95,7 @@ TEST_F(MatrixMulTest, Benchmark) {
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < num_iterations; i++) {
-        matrixMul<<>>(d_C, d_A, d_B, N);
+        launchMatrixMul(d_C, d_A, d_B, N);
     }
     cudaDeviceSynchronize();
 

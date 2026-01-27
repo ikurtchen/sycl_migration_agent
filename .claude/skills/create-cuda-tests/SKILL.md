@@ -58,11 +58,6 @@ python create_cuda_tests.py matmul.cu matrixMul \
 #include <random>
 #include <cmath>
 
-// Include kernel header
-extern "C" {
-    __global__ void matrixMul(float* C, const float* A, const float* B, int N);
-}
-
 // Test fixture class
 class MatrixMulTest : public ::testing::Test {
 protected:
@@ -192,10 +187,7 @@ bool MatrixMulTest::verifyResults(float tolerance) {
 
 TEST_F(MatrixMulTest, BasicExecution) {
     // Test that kernel executes without errors
-    dim3 block(16, 16);
-    dim3 grid((N + 15) / 16, (N + 15) / 16);
-
-    matrixMul<<<grid, block>>>(d_C, d_A, d_B, N);
+    launchMatrixMul(d_C, d_A, d_B, N);
 
     cudaError_t err = cudaGetLastError();
     ASSERT_EQ(err, cudaSuccess) << "Kernel launch failed: " 
@@ -212,11 +204,8 @@ TEST_F(MatrixMulTest, CorrectnessSmallSize) {
     TearDown();
     SetUp();
 
-    dim3 block(16, 16);
-    dim3 grid((N + 15) / 16, (N + 15) / 16);
-
     // Run kernel
-    matrixMul<<<grid, block>>>(d_C, d_A, d_B, N);
+    launchMatrixMul(d_C, d_A, d_B, N);
     cudaDeviceSynchronize();
 
     // Copy result
@@ -230,15 +219,11 @@ TEST_F(MatrixMulTest, CorrectnessSmallSize) {
 }
 
 TEST_F(MatrixMulTest, SaveForComparison) {
-    // Save inputs and outputs for SYCL comparison
-    dim3 block(16, 16);
-    dim3 grid((N + 15) / 16, (N + 15) / 16);
-
     // Save inputs
     saveInputs("cuda_outputs/matrixMul");
 
     // Run kernel
-    matrixMul<<<grid, block>>>(d_C, d_A, d_B, N);
+    launchMatrixMul(d_C, d_A, d_B, N);
     cudaDeviceSynchronize();
 
     // Copy and save outputs
@@ -257,12 +242,9 @@ TEST_F(MatrixMulTest, SaveForComparison) {
 }
 
 TEST_F(MatrixMulTest, Benchmark) {
-    dim3 block(16, 16);
-    dim3 grid((N + 15) / 16, (N + 15) / 16);
-
     // Warmup runs
     for (int i = 0; i < 5; i++) {
-        matrixMul<<<grid, block>>>(d_C, d_A, d_B, N);
+        launchMatrixMul(d_C, d_A, d_B, N);
     }
     cudaDeviceSynchronize();
 
@@ -271,7 +253,7 @@ TEST_F(MatrixMulTest, Benchmark) {
     auto start = std::chrono::high_resolution_clock::now();
 
     for (int i = 0; i < num_iterations; i++) {
-        matrixMul<<<grid, block>>>(d_C, d_A, d_B, N);
+        launchMatrixMul(d_C, d_A, d_B, N);
     }
     cudaDeviceSynchronize();
 
@@ -324,10 +306,7 @@ protected:
 };
 
 TEST_P(MatrixMulParameterizedTest, VariousSizes) {
-    dim3 block(16, 16);
-    dim3 grid((N + 15) / 16, (N + 15) / 16);
-
-    matrixMul<<<grid, block>>>(d_C, d_A, d_B, N);
+    launchMatrixMul(d_C, d_A, d_B, N);
     cudaDeviceSynchronize();
 
     SUCCEED() << "Completed test for N=" << N;
@@ -398,10 +377,8 @@ TEST_F(MatrixMulTest, BankConflictFree) {
 ```cpp
 TEST_F(MatrixMulTest, InvalidInputSizes) {
     N = 0;
-    dim3 block(16, 16);
-    dim3 grid(1, 1);
 
-    matrixMul<<<grid, block>>>(d_C, d_A, d_B, N);
+    launchMatrixMul(d_C, d_A, d_B, N);
 
     // Should handle gracefully or return error
 }
