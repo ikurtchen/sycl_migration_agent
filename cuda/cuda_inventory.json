@@ -1,0 +1,47 @@
+{
+  "repository": "/localdisk/kurt/workspace/code/ai_coding/cuda_test/vectorAdd",
+  "scan_date": "2026-01-26T14:15:00",
+  "total_cuda_files": 1,
+  "cuda_files": [
+    "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/cuda/src/vectorAdd.cu"
+  ],
+  "total_kernels": 1,
+  "kernels": [
+    {
+      "name": "vectorAdd",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/cuda/src/vectorAdd.cu",
+      "line": 47,
+      "signature": "__global__ void vectorAdd(const float *A, const float *B, float *C, int numElements)",
+      "complexity": "simple",
+      "features": [],
+      "dependencies": ["helper_cuda.h", "helper_string.h"],
+      "translation_notes": "Element-wise vector addition with simple indexing, straightforward SYCL conversion",
+      "grid_config": "blocksPerGrid = (N + 255) / 256, threadsPerBlock = 256",
+      "memory_operations": [
+        "cudaMalloc - allocate device memory",
+        "cudaMemcpy - host to device transfer",
+        "cudaMemcpy - device to host transfer",
+        "cudaFree - free device memory"
+      ]
+    }
+  ],
+  "external_libraries": [],
+  "cuda_version_required": "11.0+",
+  "migration_challenges": [],
+  "complexity_breakdown": {
+    "simple": 1,
+    "moderate": 0,
+    "complex": 0
+  },
+  "kernel_complexity_analysis": {
+    "vectorAdd": {
+      "algorithm_type": "vector_addition",
+      "arithmetic_intensity": 0.58,
+      "performance_regime": "memory_bound",
+      "overall_complexity": "moderate",
+      "compute_complexity": "low",
+      "memory_complexity": "low",
+      "control_complexity": "moderate"
+    }
+  }
+}
