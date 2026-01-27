@@ -13,9 +13,11 @@ This test suite provides thorough testing for the `vectorAdd` CUDA kernel with:
 ## Files
 
 ### Test Files
-- `test_vectorAdd.cpp` - Main test suite with Google Test cases
-- `vectorAdd_kernel.cu` - CUDA kernel implementation
-- `vectorAdd_kernel.h` - Header file with kernel declaration
+- `test_vectorAdd.cpp` - Main test suite with Google Test cases (C++ code)
+- `vectorAdd_kernel.cu` - CUDA kernel implementation + host launch function (.cu file)
+- `vectorAdd_kernel.h` - Header file with declarations for C++/CUDA interop
+
+**Important Architecture Note**: CUDA kernels (`__global__` functions) can only be launched from .cu files. The `launchVectorAdd()` host function in `vectorAdd_kernel.cu` serves as the bridge between C++ test code and CUDA kernel execution, allowing clean separation of concerns.
 
 ### Build Files
 - `CMakeLists.txt` - CMake build configuration

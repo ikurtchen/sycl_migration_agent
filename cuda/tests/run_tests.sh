@@ -108,7 +108,10 @@ fi
 # Extract benchmark results from output files if they exist
 echo "" >> "$REPORT_FILE"
 echo "Benchmark Results:" >> "$REPORT_FILE"
-for file in "$SCRIPT_DIR/cuda_outputs"/*benchmark*.json 2>/dev/null; do
+
+# Use find to handle the wildcard expansion properly
+BenchmarkFiles=$(find "$SCRIPT_DIR/cuda_outputs" -name "*benchmark*.json" 2>/dev/null)
+for file in $BenchmarkFiles; do
     if [ -f "$file" ]; then
         echo ""
         cat "$file" >> "$REPORT_FILE"
