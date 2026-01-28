@@ -135,7 +135,6 @@ q.submit([&](sycl::handler& h) {
 
 ## Skills to Use
 
-- **translate-cuda-to-sycl**: Primary translation skill
 - **optimize-sycl-kernel**: Apply Intel-specific optimizations
 
 ## Output Requirements

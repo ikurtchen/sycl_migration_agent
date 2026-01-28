@@ -8,7 +8,9 @@
     "local_project_dir": "./cuda",
     "local_results_dir": "./results/cuda_results",
     "cuda_arch": "80,86",
-    "gpu_id": 0
+    "gpu_id": 0,
+    "conda_env": "kurt_vllm_debug",
+    "cuda_home": "/usr/local/cuda"
   },
   "intel_gpu_server": {
     "host": "172.16.114.168",
