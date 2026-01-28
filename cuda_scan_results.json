@@ -1,0 +1,260 @@
+{
+  "repository": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent",
+  "total_cuda_files": 7,
+  "cuda_files": [
+    "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/fp16_kernels.cu",
+    "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+    "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/cutlass_kernels.cu",
+    "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/onnx/onnx_kernels.cu",
+    "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/third_party/fused_multi_head_attention/fused_multi_head_attention_backward.cu",
+    "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/third_party/fused_multi_head_attention/fused_multihead_attention_fixed_seqlen.cu",
+    "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/third_party/fused_multi_head_attention/fused_multihead_attention_variable_seqlen.cu"
+  ],
+  "total_kernels": 25,
+  "kernels": [
+    {
+      "name": "SE_Layer_NHWC",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/fp16_kernels.cu",
+      "line": 56,
+      "signature": "__global__ void SE_Layer_NHWC(half* output, const half* skip, const half* input,\n                              const half* w1, const half* b1, const half* w2,\n                              const half* b2, const half* bPrev,\n                              ActivationFunction activation)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "OutputInputTransformKernel_fp16_shmem_board",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/fp16_kernels.cu",
+      "line": 220,
+      "signature": "__global__ __launch_bounds__(\n    kMaxResBlockFusingSeKFp16Ampere,\n    1) void OutputInputTransformKernel_fp16_shmem_board(int N, int C, int se_K,\n                                                        half* output,\n                                                        const half* input,\n                                                        half* skip,\n                                                        const half* bias,\n                                                        const half* w1,\n                                                        const half* b1,\n                                                        const half* w2,\n                                                        const half* b2)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "addVectors_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 48,
+      "signature": "__global__ void addVectors_kernel(T* c, T* a, T* b, int size, int asize,\n                                  int bsize, ActivationFunction activation)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "addVectorsHNC_NHC_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 79,
+      "signature": "__global__ void addVectorsHNC_NHC_kernel(T* a, T* b, int N, int H, int C)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "addBiasBatched_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 107,
+      "signature": "__global__ void addBiasBatched_kernel(T* output, const T* input, const T* bias,\n                                      int N, int C)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "addBiasBatched_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 206,
+      "signature": "__global__ void addBiasBatched_kernel(T* output, const T* input, const T* bias,\n                                      int N, int C, int Nstride)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "addBias_NCHW_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 312,
+      "signature": "__global__ void addBias_NCHW_kernel(T* c, T* a, T* b, int N, int C, int H,\n                                    int W, ActivationFunction activation)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "NCHWtoNHWC_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 362,
+      "signature": "__global__ void NCHWtoNHWC_kernel(dT* output_tensor, const sT* input_tensor,\n                                  int Nin, int Cin, int Nout, int Cout, int H,\n                                  int W)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "copyTypeConverted_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 395,
+      "signature": "__global__ void copyTypeConverted_kernel(DstType* op, SrcType* ip, int N)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "batchNorm_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 412,
+      "signature": "__global__ void batchNorm_kernel(T* output, const T* input, const T* skipInput,\n                                 int N, int C, int H, int W, const float* means,\n                                 const float* varMultipliers,\n                                 ActivationFunction activation)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "expandPlanes_kernel_NHWC",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 454,
+      "signature": "__global__ void expandPlanes_kernel_NHWC(T* output, const uint64_t* masks,\n                                         const T* values, int n)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "expandPlanes_kernel_NCHW",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 485,
+      "signature": "__global__ void expandPlanes_kernel_NCHW(T* output, const uint64_t* masks,\n                                         const T* values, unsigned n)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "globalScale_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 524,
+      "signature": "__global__ void globalScale_kernel(T* output, const T* input,\n                                   const T* scaleBias, const T* prevLayerBias,\n                                   int inputSize, int C,\n                                   ActivationFunction activation)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "globalScale_kernel_fp16_nhwc",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 557,
+      "signature": "__global__ void globalScale_kernel_fp16_nhwc(half* output, const half* input,\n                                             const half* scaleBias,\n                                             const half* prevLayerBias,\n                                             int inputSize, int C, int HWC,\n                                             ActivationFunction activation)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "globalAvgPool_kernel_NHWC_fp16",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 592,
+      "signature": "__global__ void globalAvgPool_kernel_NHWC_fp16(half* output, const half* input,\n                                               const half* prevLayerBias,\n                                               int inputSize, int outputSize)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "globalAvgPool_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 619,
+      "signature": "__global__ void globalAvgPool_kernel(T* output, const T* input,\n                                     const T* prevLayerBias, int inputSize,\n                                     int outputSize, int C)",
+      "features": [
+        "warp_shuffle"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "policyMap_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 704,
+      "signature": "__global__ void policyMap_kernel(T* output, const T* input,\n                                 const short* indices, int N, int inputSize,\n                                 int usedSize, int outputSize)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "softmax_opt_64_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 776,
+      "signature": "__global__ void softmax_opt_64_kernel(T* output, const T* input,\n                                      const T* input2, int N)",
+      "features": [
+        "warp_shuffle"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "softmax_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 843,
+      "signature": "__global__ void softmax_kernel(T* output, const T* input, const T* input2)",
+      "features": [
+        "shared_memory",
+        "syncthreads",
+        "atomics"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "layer_norm_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 933,
+      "signature": "__global__ void layer_norm_kernel(int N, int C, T* output, const T* input,\n                                  const T* bias, const T* skip, const T* gammas,\n                                  const T* betas, float ep, float alpha,\n                                  ActivationFunction act)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "promotion_logits_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 1117,
+      "signature": "__global__ void promotion_logits_kernel(int C, T* output, const T* keys,\n                                        const T* ppo,\n                                        const T* policy_attn_logits)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "preprocess_for_attention_body_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 1204,
+      "signature": "__global__ void preprocess_for_attention_body_kernel(\n    T* output, const T* input, const T* encoding, int input_size,\n    int encoding_size, bool is_pe_dense_embedding)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "input_gating_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 1247,
+      "signature": "__global__ void input_gating_kernel(T* output, const T* input, const T* mult,\n                                    const T* add, int HW, int C)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "genOffsetPointers_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/cuda/common_kernels.cu",
+      "line": 1284,
+      "signature": "__global__ void genOffsetPointers_kernel(T** offsets, int heads, int block_size,\n                                         int depth, int d_model, T* k, T* q,\n                                         T* b1, T* v, T* b2)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "expandPlanes_kernel",
+      "file": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent/lc0/src/neural/backends/onnx/onnx_kernels.cu",
+      "line": 37,
+      "signature": "__global__ void expandPlanes_kernel(DataType* output, const uint64_t* masks,\n                                    const DataType* values, unsigned n)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    }
+  ],
+  "external_libraries": [],
+  "migration_challenges": []
+}
