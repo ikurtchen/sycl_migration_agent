@@ -1,0 +1,617 @@
+{
+  "repository": ".",
+  "total_cuda_files": 17,
+  "cuda_files": [
+    "./cuda/src/neural/backends/cuda/fp16_kernels.cu",
+    "./cuda/src/neural/backends/cuda/common_kernels.cu",
+    "./cuda/src/neural/backends/cuda/cutlass_kernels.cu",
+    "./cuda/tests/math/batch_norm_test.cu",
+    "./cuda/tests/math/reduce_sum_test.cu",
+    "./cuda/tests/math/add_bias_test.cu",
+    "./cuda/tests/math/softmax_test.cu",
+    "./cuda/tests/math/add_vectors_test.cu",
+    "./cuda/tests/nn/winograd_transform_test.cu",
+    "./cuda/tests/nn/layer_norm_test.cu",
+    "./cuda/tests/nn/policy_head_test.cu",
+    "./cuda/tests/nn/value_head_test.cu",
+    "./cuda/tests/fp16/se_layer_nhwc_test.cu",
+    "./cuda/tests/fp16/output_input_transform_test.cu",
+    "./cuda/tests/reduction/atomic_sum_test.cu",
+    "./cuda/tests/reduction/transpose_test.cu",
+    "./cuda/tests/reduction/reshape_test.cu"
+  ],
+  "total_kernels": 58,
+  "kernels": [
+    {
+      "name": "SE_Layer_NHWC",
+      "file": "./cuda/src/neural/backends/cuda/fp16_kernels.cu",
+      "line": 56,
+      "signature": "__global__ void SE_Layer_NHWC(half* output, const half* skip, const half* input,\n                              const half* w1, const half* b1, const half* w2,\n                              const half* b2, const half* bPrev,\n                              ActivationFunction activation)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "OutputInputTransformKernel_fp16_shmem_board",
+      "file": "./cuda/src/neural/backends/cuda/fp16_kernels.cu",
+      "line": 220,
+      "signature": "__global__ __launch_bounds__(\n    kMaxResBlockFusingSeKFp16Ampere,\n    1) void OutputInputTransformKernel_fp16_shmem_board(int N, int C, int se_K,\n                                                        half* output,\n                                                        const half* input,\n                                                        half* skip,\n                                                        const half* bias,\n                                                        const half* w1,\n                                                        const half* b1,\n                                                        const half* w2,\n                                                        const half* b2)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "addVectors_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 48,
+      "signature": "__global__ void addVectors_kernel(T* c, T* a, T* b, int size, int asize,\n                                  int bsize, ActivationFunction activation)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "addVectorsHNC_NHC_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 79,
+      "signature": "__global__ void addVectorsHNC_NHC_kernel(T* a, T* b, int N, int H, int C)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "addBiasBatched_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 107,
+      "signature": "__global__ void addBiasBatched_kernel(T* output, const T* input, const T* bias,\n                                      int N, int C)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "addBiasBatched_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 206,
+      "signature": "__global__ void addBiasBatched_kernel(T* output, const T* input, const T* bias,\n                                      int N, int C, int Nstride)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "addBias_NCHW_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 312,
+      "signature": "__global__ void addBias_NCHW_kernel(T* c, T* a, T* b, int N, int C, int H,\n                                    int W, ActivationFunction activation)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "NCHWtoNHWC_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 362,
+      "signature": "__global__ void NCHWtoNHWC_kernel(dT* output_tensor, const sT* input_tensor,\n                                  int Nin, int Cin, int Nout, int Cout, int H,\n                                  int W)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "copyTypeConverted_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 395,
+      "signature": "__global__ void copyTypeConverted_kernel(DstType* op, SrcType* ip, int N)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "batchNorm_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 412,
+      "signature": "__global__ void batchNorm_kernel(T* output, const T* input, const T* skipInput,\n                                 int N, int C, int H, int W, const float* means,\n                                 const float* varMultipliers,\n                                 ActivationFunction activation)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "expandPlanes_kernel_NHWC",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 454,
+      "signature": "__global__ void expandPlanes_kernel_NHWC(T* output, const uint64_t* masks,\n                                         const T* values, int n)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "expandPlanes_kernel_NCHW",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 485,
+      "signature": "__global__ void expandPlanes_kernel_NCHW(T* output, const uint64_t* masks,\n                                         const T* values, unsigned n)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "globalScale_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 524,
+      "signature": "__global__ void globalScale_kernel(T* output, const T* input,\n                                   const T* scaleBias, const T* prevLayerBias,\n                                   int inputSize, int C,\n                                   ActivationFunction activation)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "globalScale_kernel_fp16_nhwc",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 557,
+      "signature": "__global__ void globalScale_kernel_fp16_nhwc(half* output, const half* input,\n                                             const half* scaleBias,\n                                             const half* prevLayerBias,\n                                             int inputSize, int C, int HWC,\n                                             ActivationFunction activation)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "globalAvgPool_kernel_NHWC_fp16",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 592,
+      "signature": "__global__ void globalAvgPool_kernel_NHWC_fp16(half* output, const half* input,\n                                               const half* prevLayerBias,\n                                               int inputSize, int outputSize)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "globalAvgPool_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 619,
+      "signature": "__global__ void globalAvgPool_kernel(T* output, const T* input,\n                                     const T* prevLayerBias, int inputSize,\n                                     int outputSize, int C)",
+      "features": [
+        "warp_shuffle"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "policyMap_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 704,
+      "signature": "__global__ void policyMap_kernel(T* output, const T* input,\n                                 const short* indices, int N, int inputSize,\n                                 int usedSize, int outputSize)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "softmax_opt_64_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 776,
+      "signature": "__global__ void softmax_opt_64_kernel(T* output, const T* input,\n                                      const T* input2, int N)",
+      "features": [
+        "warp_shuffle"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "softmax_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 843,
+      "signature": "__global__ void softmax_kernel(T* output, const T* input, const T* input2)",
+      "features": [
+        "shared_memory",
+        "syncthreads",
+        "atomics"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "layer_norm_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 933,
+      "signature": "__global__ void layer_norm_kernel(int N, int C, T* output, const T* input,\n                                  const T* bias, const T* skip, const T* gammas,\n                                  const T* betas, float ep, float alpha,\n                                  ActivationFunction act)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "promotion_logits_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 1117,
+      "signature": "__global__ void promotion_logits_kernel(int C, T* output, const T* keys,\n                                        const T* ppo,\n                                        const T* policy_attn_logits)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "preprocess_for_attention_body_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 1204,
+      "signature": "__global__ void preprocess_for_attention_body_kernel(\n    T* output, const T* input, const T* encoding, int input_size,\n    int encoding_size, bool is_pe_dense_embedding)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "input_gating_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 1247,
+      "signature": "__global__ void input_gating_kernel(T* output, const T* input, const T* mult,\n                                    const T* add, int HW, int C)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "genOffsetPointers_kernel",
+      "file": "./cuda/src/neural/backends/cuda/common_kernels.cu",
+      "line": 1284,
+      "signature": "__global__ void genOffsetPointers_kernel(T** offsets, int heads, int block_size,\n                                         int depth, int d_model, T* k, T* q,\n                                         T* b1, T* v, T* b2)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "batch_norm_kernel",
+      "file": "./cuda/tests/math/batch_norm_test.cu",
+      "line": 5,
+      "signature": "__global__ void batch_norm_kernel(float* input, const float* gamma, const float* beta,\n                                 const float* running_mean, const float* running_var,\n                                 float epsilon, int batch_size, int channels,\n                                 int spatial_size)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "batch_norm_inference_kernel",
+      "file": "./cuda/tests/math/batch_norm_test.cu",
+      "line": 26,
+      "signature": "__global__ void batch_norm_inference_kernel(const float* input, float* output,\n                                           const float* gamma, const float* beta,\n                                           const float* mean, const float* var,\n                                           float epsilon, int batch_size, int channels,\n                                           int spatial_size)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "reduce_sum_kernel",
+      "file": "./cuda/tests/math/reduce_sum_test.cu",
+      "line": 5,
+      "signature": "__global__ void reduce_sum_kernel(const float* input, float* output, int size)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "atomic_reduce_sum_kernel",
+      "file": "./cuda/tests/math/reduce_sum_test.cu",
+      "line": 30,
+      "signature": "__global__ void atomic_reduce_sum_kernel(const float* input, float* output, int size)",
+      "features": [
+        "atomics"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "reduce_sum_2d_kernel",
+      "file": "./cuda/tests/math/reduce_sum_test.cu",
+      "line": 39,
+      "signature": "__global__ void reduce_sum_2d_kernel(const float* input, float* output,\n                                    int batch_size, int channels, int spatial_size)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "add_bias_1d_kernel",
+      "file": "./cuda/tests/math/add_bias_test.cu",
+      "line": 5,
+      "signature": "__global__ void add_bias_1d_kernel(float* input, const float* bias, int channels, int spatial_size)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "add_bias_2d_kernel",
+      "file": "./cuda/tests/math/add_bias_test.cu",
+      "line": 15,
+      "signature": "__global__ void add_bias_2d_kernel(float* input, const float* bias, int batch_size, int channels, int spatial_size)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "softmax_1d_kernel",
+      "file": "./cuda/tests/math/softmax_test.cu",
+      "line": 6,
+      "signature": "__global__ void softmax_1d_kernel(float* input, int size)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "softmax_2d_kernel",
+      "file": "./cuda/tests/math/softmax_test.cu",
+      "line": 45,
+      "signature": "__global__ void softmax_2d_kernel(float* input, int batch_size, int channels)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "add_vectors_kernel",
+      "file": "./cuda/tests/math/add_vectors_test.cu",
+      "line": 5,
+      "signature": "__global__ void add_vectors_kernel(const float* a, const float* b, float* c, int n)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "add_vectors_kernel_double",
+      "file": "./cuda/tests/math/add_vectors_test.cu",
+      "line": 12,
+      "signature": "__global__ void add_vectors_kernel_double(const double* a, const double* b, double* c, int n)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "winograd_input_transform_kernel",
+      "file": "./cuda/tests/nn/winograd_transform_test.cu",
+      "line": 6,
+      "signature": "__global__ void winograd_input_transform_kernel(const float* input, float* output,\n                                               int batch_size, int channels,\n                                               int height, int width)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "winograd_output_transform_kernel",
+      "file": "./cuda/tests/nn/winograd_transform_test.cu",
+      "line": 110,
+      "signature": "__global__ void winograd_output_transform_kernel(const float* input, float* output,\n                                                int batch_size, int channels,\n                                                int height, int width)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "fp16_layer_norm_kernel",
+      "file": "./cuda/tests/nn/layer_norm_test.cu",
+      "line": 5,
+      "signature": "__global__ void fp16_layer_norm_kernel(half* input, const half* gamma, const half* beta,\n                                       float epsilon, int hidden_size, int batch_size)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "layer_norm_kernel",
+      "file": "./cuda/tests/nn/layer_norm_test.cu",
+      "line": 60,
+      "signature": "__global__ void layer_norm_kernel(float* input, const float* gamma, const float* beta,\n                                  float epsilon, int hidden_size, int batch_size)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "policy_head_kernel",
+      "file": "./cuda/tests/nn/policy_head_test.cu",
+      "line": 5,
+      "signature": "__global__ void policy_head_kernel(const float* input, float* output,\n                                   const float* weight, const float* bias,\n                                   int input_size, int output_size)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "policy_softmax_kernel",
+      "file": "./cuda/tests/nn/policy_head_test.cu",
+      "line": 40,
+      "signature": "__global__ void policy_softmax_kernel(float* policy, int output_size)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "value_head_fc1_kernel",
+      "file": "./cuda/tests/nn/value_head_test.cu",
+      "line": 5,
+      "signature": "__global__ void value_head_fc1_kernel(const float* input, float* output,\n                                     const float* weight, const float* bias,\n                                     int input_size, int hidden_size)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "value_head_fc2_kernel",
+      "file": "./cuda/tests/nn/value_head_test.cu",
+      "line": 40,
+      "signature": "__global__ void value_head_fc2_kernel(const float* input, float* output,\n                                     const float* weight, const float* bias,\n                                     int hidden_size)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "tanh_activation_kernel",
+      "file": "./cuda/tests/nn/value_head_test.cu",
+      "line": 51,
+      "signature": "__global__ void tanh_activation_kernel(float* output)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "se_layer_nhwc_test_kernel",
+      "file": "./cuda/tests/fp16/se_layer_nhwc_test.cu",
+      "line": 5,
+      "signature": "__global__ void se_layer_nhwc_test_kernel(half* input, half* output,\n                                          const half* weight1, const half* bias1,\n                                          const half* weight2, const half* bias2,\n                                          int channels, int height, int width)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "output_input_transform_kernel",
+      "file": "./cuda/tests/fp16/output_input_transform_test.cu",
+      "line": 6,
+      "signature": "__global__ void output_input_transform_kernel(half* output, const half* input,\n                                             int width, int height)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "atomic_sum_single_kernel",
+      "file": "./cuda/tests/reduction/atomic_sum_test.cu",
+      "line": 5,
+      "signature": "__global__ void atomic_sum_single_kernel(const float* input, float* output, int size)",
+      "features": [
+        "atomics"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "atomic_sum_shared_kernel",
+      "file": "./cuda/tests/reduction/atomic_sum_test.cu",
+      "line": 14,
+      "signature": "__global__ void atomic_sum_shared_kernel(const float* input, float* output, int size)",
+      "features": [
+        "shared_memory",
+        "syncthreads",
+        "atomics"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "atomic_sum_channel_kernel",
+      "file": "./cuda/tests/reduction/atomic_sum_test.cu",
+      "line": 39,
+      "signature": "__global__ void atomic_sum_channel_kernel(const float* input, float* output,\n                                        int size, int channels)",
+      "features": [
+        "atomics"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "atomic_sum_double_kernel",
+      "file": "./cuda/tests/reduction/atomic_sum_test.cu",
+      "line": 50,
+      "signature": "__global__ void atomic_sum_double_kernel(const double* input, double* output, int size)",
+      "features": [
+        "atomics"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "atomic_sum_strided_kernel",
+      "file": "./cuda/tests/reduction/atomic_sum_test.cu",
+      "line": 59,
+      "signature": "__global__ void atomic_sum_strided_kernel(const float* input, float* output,\n                                         int size, int stride)",
+      "features": [
+        "atomics"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "transpose_kernel",
+      "file": "./cuda/tests/reduction/transpose_test.cu",
+      "line": 5,
+      "signature": "__global__ void transpose_kernel(const float* input, float* output,\n                                int rows, int cols)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "transpose_naive_kernel",
+      "file": "./cuda/tests/reduction/transpose_test.cu",
+      "line": 28,
+      "signature": "__global__ void transpose_naive_kernel(const float* input, float* output,\n                                       int rows, int cols)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "transpose_padded_kernel",
+      "file": "./cuda/tests/reduction/transpose_test.cu",
+      "line": 39,
+      "signature": "__global__ void transpose_padded_kernel(const float* input, float* output,\n                                        int rows, int cols)",
+      "features": [
+        "shared_memory",
+        "syncthreads"
+      ],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "reshape_1d_to_2d_kernel",
+      "file": "./cuda/tests/reduction/reshape_test.cu",
+      "line": 5,
+      "signature": "__global__ void reshape_1d_to_2d_kernel(const float* input, float* output,\n                                        int size, int rows, int cols)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "reshape_2d_to_1d_kernel",
+      "file": "./cuda/tests/reduction/reshape_test.cu",
+      "line": 16,
+      "signature": "__global__ void reshape_2d_to_1d_kernel(const float* input, float* output,\n                                        int rows, int cols)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "reshape_nd_kernel",
+      "file": "./cuda/tests/reduction/reshape_test.cu",
+      "line": 27,
+      "signature": "__global__ void reshape_nd_kernel(const float* input, float* output,\n                                 const int* input_dims, const int* output_dims,\n                                 int input_rank, int output_rank, int total_size)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    },
+    {
+      "name": "reshape_batch_kernel",
+      "file": "./cuda/tests/reduction/reshape_test.cu",
+      "line": 47,
+      "signature": "__global__ void reshape_batch_kernel(const float* input, float* output,\n                                    int batch_size, int input_size_per_batch,\n                                    int output_size_per_batch)",
+      "features": [],
+      "dependencies": [],
+      "complexity": "simple"
+    }
+  ],
+  "external_libraries": [],
+  "migration_challenges": []
+}

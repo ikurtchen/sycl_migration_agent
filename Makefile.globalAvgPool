@@ -1,0 +1,31 @@
+# Makefile for testing globalAvgPool kernel migration
+# Usage: make -f Makefile.globalAvgPool
+
+# Compiler and flags
+CXX = dpcpp
+CXXFLAGS = -O2 -g -std=c++17
+INCLUDES = -I./sycl/src -I./neural/tables
+
+# Source files
+SYCL_COMMON_KERNELS = ./sycl/src/neural/backends/sycl/common_kernels.cpp
+TEST_FILE = ./tests/test_globalAvgPool.cpp
+
+# Output
+EXECUTABLE = test_globalAvgPool
+
+# Default target
+all: $(EXECUTABLE)
+
+# Build the test executable
+$(EXECUTABLE): $(SYCL_COMMON_KERNELS) $(TEST_FILE)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $@ $(SYCL_COMMON_KERNELS) $(TEST_FILE) -lsycl
+
+# Run tests
+test: $(EXECUTABLE)
+	./$(EXECUTABLE)
+
+# Clean
+clean:
+	rm -f $(EXECUTABLE)
+
+.PHONY: all test clean

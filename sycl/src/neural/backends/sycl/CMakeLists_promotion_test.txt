@@ -1,0 +1,49 @@
+cmake_minimum_required(VERSION 3.18)
+project(promotion_logits_test)
+
+find_package(PkgConfig REQUIRED)
+find_package(OpenCL REQUIRED)
+
+# Find SYCL compiler
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Try Intel oneAPI DPC++ compiler
+find_program(DPCPP_COMPILER
+  NAMES dpcpp clang++
+  DOC "SYCL DPC++ compiler"
+)
+
+if(NOT DPCPP_COMPILER)
+  message(FATAL_ERROR "DPC++ compiler not found. Please install Intel oneAPI DPC++.")
+endif()
+
+set(CMAKE_CXX_COMPILER ${DPCPP_COMPILER})
+
+# Set SYCL flags
+set(SYCL_FLAGS "-fsycl" "-fno-sycl-use-cpu-features")
+
+# Compilation flags
+add_compile_options(${SYCL_FLAGS})
+add_link_options(${SYCL_FLAGS})
+
+# Create executable for testing promotion logits
+add_executable(test_promotion_logits
+  test_promotion_logits.cpp
+  common_kernels.cpp
+)
+
+target_include_directories(test_promotion_logits PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
+set_target_properties(test_promotion_logits PROPERTIES
+  CXX_STANDARD 17
+  CXX_STANDARD_REQUIRED ON
+)
+
+# Add OpenMP if available
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+  target_link_libraries(test_promotion_logits OpenMP::OpenMP_CXX)
+endif()
+
+message(STATUS "Promotion logits test configured")

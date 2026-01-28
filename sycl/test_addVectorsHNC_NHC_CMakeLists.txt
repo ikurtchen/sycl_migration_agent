@@ -1,0 +1,28 @@
+cmake_minimum_required(VERSION 3.18)
+project(test_addVectorsHNC_NHC)
+
+# Find oneAPI DPC++/SYCL compiler
+set(CMAKE_CXX_COMPILER "icpx" CACHE STRING "C++ compiler")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Find SYCL
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SYCL REQUIRED sycl)
+
+# Add necessary flags
+add_compile_options(-fsycl)
+
+# Include directories
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+# Test executable
+add_executable(test_addVectorsHNC_NHC test_addVectorsHNC_NHC.cpp src/neural/backends/sycl/common_kernels.cpp)
+
+# Link libraries
+target_link_libraries(test_addVectorsHNC_NHC sycl)
+
+# Set output directory
+set_target_properties(test_addVectorsHNC_NHC PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin
+)

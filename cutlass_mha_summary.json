@@ -1,0 +1,49 @@
+{
+  "repository": "/localdisk/kurt/workspace/code/ai_coding/sycl_migration_agent",
+  "scan_date": "2026-01-28",
+  "cutlass_analysis": {
+    "file": "cuda/src/neural/backends/cuda/cutlass_kernels.cu",
+    "main_function": "fusedMHA",
+    "implementation_type": "CUTLASS template wrapper",
+    "external_dependency": true,
+    "library": "NVIDIA CUTLASS (example #41)",
+    "architectureSpecific": "SM80 (Ampere) only",
+    "dataTypes": ["cutlass::half_t"],
+    "features": [
+      "fused_multi_head_attention",
+      "dynamic_shared_memory",
+      "optional_bias_support",
+      "single_value_iteration_optimization"
+    ]
+  },
+  "migration_challenges": {
+    "complexity": "HIGH",
+    "primary_issue": "External library dependency not portable to SYCL",
+    "secondary_issues": [
+      "Hardware-specific optimizations for NVIDIA GPUs",
+      "Deeply nested CUTLASS templates",
+      "No direct CUDA kernels to translate"
+    ],
+    "estimated_effort_weeks": {
+      "oneMKL_integration": 2-3,
+      "custom_implementation": 4-6
+    }
+  },
+  "recommended_approach": {
+    "primary": "oneMKL integration",
+    "rationale": "Leverage Intel's optimized library similar to NVIDIA's approach",
+    "steps": [
+      "Replace CUTLASS GEMM with oneMKL::blas::gemm",
+      "Implement custom SYCL softmax",
+      "Handle memory layout conversions",
+      "Validate and optimize for Intel GPUs"
+    ]
+  },
+  "timeline_days": 9-13,
+  "risk_level": "MEDIUM (mitigated by using vendor libraries)",
+  "success_criteria": [
+    "Output numerical accuracy within FP16 tolerance",
+    "Performance >80% of theoretical peak on Intel GPU",
+    "Maintains compatibility with existing interface"
+  ]
+}
