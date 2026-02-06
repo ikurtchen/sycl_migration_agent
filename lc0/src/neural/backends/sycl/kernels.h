@@ -27,7 +27,7 @@
 #pragma once
 
 #include "sycl_common.h"
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 #include "neural/tables/activation_function.h"
 
 namespace lczero {

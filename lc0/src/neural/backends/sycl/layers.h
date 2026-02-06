@@ -57,8 +57,8 @@ class BaseLayer {
   // Input2 is optional (skip connection).
   virtual void Eval(int N, DataType* output, const DataType* input,
                     const DataType* input2, void* scratch, size_t scratch_size,
-                    cudnnHandle_t cudnn, cublasHandle_t cublas,
-                    cudaStream_t stream, DataType*** = nullptr) = 0;
+                    sycl::queue queue, void* blas_handle,
+                    void* stream_handle, DataType*** = nullptr) = 0;
 
  protected:
   BaseLayer* input_;
@@ -72,7 +72,7 @@ class BaseLayer {
 
   void cublasRowMajorMatrixMul(const DataType* A, const DataType* B,
                                DataType* Out, int M, int N, int K,
-                               int batchSize, cublasHandle_t cublas);
+                               int batchSize, void* blas_handle);
 };
 
 #ifdef USE_CUDNN
@@ -97,7 +97,7 @@ class ConvLayer : public BaseLayer<DataType> {
   void LoadWeights(float* pfilter, float* pBias, void* scratch);
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -126,6 +126,10 @@ class ConvLayer : public BaseLayer<DataType> {
 template <typename DataType>
 class FCLayer : public BaseLayer<DataType> {
   using BaseLayer<DataType>::nhwc_;
+  using BaseLayer<DataType>::input_;
+  using BaseLayer<DataType>::C;
+  using BaseLayer<DataType>::H;
+  using BaseLayer<DataType>::W;
 
  public:
   FCLayer(BaseLayer<DataType>* ip, int C, int H, int W, bool bias,
@@ -135,7 +139,7 @@ class FCLayer : public BaseLayer<DataType> {
   void LoadWeights(float* cpuWeight, float* cpuBias, void* scratch);
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -148,6 +152,10 @@ class FCLayer : public BaseLayer<DataType> {
 template <typename DataType>
 class PolicyMapLayer : public BaseLayer<DataType> {
   using BaseLayer<DataType>::nhwc_;
+  using BaseLayer<DataType>::input_;
+  using BaseLayer<DataType>::C;
+  using BaseLayer<DataType>::H;
+  using BaseLayer<DataType>::W;
 
  public:
   PolicyMapLayer(BaseLayer<DataType>* ip, int C, int H, int W, int usedSize,
@@ -157,7 +165,7 @@ class PolicyMapLayer : public BaseLayer<DataType> {
   void LoadWeights(const short* cpuWeight, void* scratch);
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -173,7 +181,10 @@ class PolicyMapLayer : public BaseLayer<DataType> {
 // connection -> RELU.
 template <typename DataType>
 class SELayer : public BaseLayer<DataType> {
+  using BaseLayer<DataType>::input_;
   using BaseLayer<DataType>::C;
+  using BaseLayer<DataType>::H;
+  using BaseLayer<DataType>::W;
   using BaseLayer<DataType>::nhwc_;
 
  public:
@@ -186,7 +197,7 @@ class SELayer : public BaseLayer<DataType> {
 
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -224,7 +235,7 @@ class FusedWinogradConvSELayer : public BaseLayer<DataType> {
   void LoadSEWeights(float* w1, float* b1, float* w2, float* b2, void* scratch);
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -264,7 +275,7 @@ class Conv1Layer : public BaseLayer<DataType> {
   void LoadWeights(float* pfilter, float* pBias, void* scratch);
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -278,7 +289,7 @@ class Conv1Layer : public BaseLayer<DataType> {
   // uses stride of 0 to read a vector as a matrix
   void cublasSpecialMatrixMul(const DataType* A, const DataType* B,
                               DataType* Out, int M, int N, int K, int batchSize,
-                              cublasHandle_t cublas);
+                              void* blas_handle);
 };
 
 // Multi-pass Winograd Conv fused with (optional) SE
@@ -303,7 +314,7 @@ class ResidualBlock : public BaseLayer<DataType> {
 
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -339,7 +350,7 @@ class EncoderBlock {
   ~EncoderBlock();
 
   void Eval(int N, DataType* inpop, DataType* scratch0, DataType* scratch1,
-            DataType* scratch2, cublasHandle_t cublas, cudaStream_t stream,
+            DataType* scratch2, void* blas_handle, void* stream_handle,
             DataType*** offset_pointers) const;
 
   // all GPU side pointers
@@ -414,7 +425,7 @@ class AttentionPolicyHead : public BaseLayer<DataType> {
   ~AttentionPolicyHead();
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -452,7 +463,7 @@ class EmbeddingLayer : public BaseLayer<DataType> {
 
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -480,7 +491,7 @@ class AttentionBody : public BaseLayer<DataType> {
   ~AttentionBody();
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -529,7 +540,7 @@ class ValueHead : public BaseLayer<DataType> {
   ~ValueHead();
   void Eval(int N, DataType* output, const DataType* input,
             const DataType* input2, void* scratch, size_t scratch_size,
-            cudnnHandle_t cudnn, cublasHandle_t cublas, cudaStream_t stream,
+            sycl::queue queue, void* blas_handle, void* stream_handle,
             DataType*** = nullptr) override;
 
  private:
@@ -549,5 +560,5 @@ class ValueHead : public BaseLayer<DataType> {
   ActivationFunction act_;
 };
 
-}  // namespace cudnn_backend
+}  // namespace sycl_backend
 }  // namespace lczero

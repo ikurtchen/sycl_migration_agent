@@ -1,0 +1,283 @@
+/*
+  This file is part of Leela Chess Zero.
+  Copyright (C) 2018-2022 The LCZero Authors
+
+  Leela Chess is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  Leela Chess is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with Leela Chess.  If not, see <http://www.gnu.org/licenses/>.
+
+  Additional permission under GNU GPL version 3 section 7
+
+  If you modify this Program, or any covered work, by linking or
+  combining it with NVIDIA Corporation's libraries from the NVIDIA CUDA
+  Toolkit and the NVIDIA CUDA Deep Neural Network library (or a
+  modified version of those libraries), containing parts covered by the
+  terms of the respective license agreement, the licensors of this
+  Program grant you additional permission to convey the resulting work.
+*/
+#include <algorithm>
+#include <cassert>
+#include <list>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <chrono>
+#include <type_traits>
+
+#include "sycl_common.h"
+#include "inputs_outputs.h"
+#include "kernels.h"
+#include "layers.h"
+#include "neural/factory.h"
+#include "neural/network_legacy.h"
+#include "neural/tables/attention_policy_map.h"
+#include "neural/tables/policy_map.h"
+#include "utils/exception.h"
+#include "utils/fp16_utils.h"
+#include "utils/trace.h"
+
+namespace lczero {
+using namespace sycl_backend;
+
+template <typename DataType>
+class SyclNetwork;
+
+template <typename DataType>
+class SyclNetworkComputation : public NetworkComputation {
+ public:
+  SyclNetworkComputation(SyclNetwork<DataType>* network, bool wdl, bool moves_left)
+      : wdl_(wdl), moves_left_(moves_left), network_(network) {
+    batch_size_ = 0;
+  }
+
+  void AddInput(InputPlanes&& input) override {
+    // Simple implementation for debugging - just count inputs
+    assert(input.size() > 0);
+    batch_size_++;
+  }
+
+  void ComputeBlocking() override {
+    // Minimal implementation for debugging
+    LCTRACE_FUNCTION_SCOPE;
+    assert(GetBatchSize() >= 1);
+
+    // For now, just sleep to simulate work
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    // Reset batch size after computation
+    batch_size_ = 0;
+  }
+
+  int GetBatchSize() const override { return batch_size_; }
+
+  float GetQVal(int sample) const override {
+    // Return dummy value for debugging
+    return 0.5f;
+  }
+
+  float GetDVal(int sample) const override {
+    // Return dummy value for debugging
+    if (wdl_) {
+      return 0.5f;
+    }
+    return 0.0f;
+  }
+
+  float GetPVal(int sample, int plane) const override {
+    // Return dummy value for debugging
+    return 1.0f / 18592; // Equal probability for all moves
+  }
+
+  float GetMVal(int sample) const override {
+    // Return dummy value for debugging if moves left is enabled
+    if (moves_left_) {
+      return 50.0f; // Average move count
+    }
+    return 0.0f;
+  }
+
+ private:
+  bool wdl_;
+  bool moves_left_;
+  SyclNetwork<DataType>* network_;
+  int batch_size_ = 0;
+};
+
+template <typename DataType>
+class SyclNetwork : public lczero::Network {
+ public:
+  SyclNetwork(const WeightsFile& weights, const OptionsDict& options);
+  virtual ~SyclNetwork();
+
+  void AddInput(InputPlanes& input);
+  void Eval(int batch_size);
+
+  // Get the computation device.
+  std::string GetDeviceString() const;
+
+  // Required pure virtual methods from Network base class
+  const NetworkCapabilities& GetCapabilities() const override;
+  std::unique_ptr<NetworkComputation> NewComputation() override;
+  int GetThreads() const override { return 1; }
+  bool IsCpu() const override { return false; }
+
+ private:
+  void Initialize(const WeightsFile& weights);
+  void LoadWeights(const MultiHeadWeights& weights);
+
+  sycl::queue queue_;
+  std::unique_ptr<NetworkComputation> computation_;
+
+  // Neural network layers
+  std::vector<std::unique_ptr<BaseLayer<DataType>>> layers_;
+
+  // Memory management
+  void* device_scratch_ = nullptr;
+  size_t scratch_size_ = 0;
+
+  // Input/output buffers
+  std::vector<DataType> input_;
+  std::vector<DataType> output_;
+
+  // Network capabilities
+  NetworkCapabilities capabilities_;
+
+  // WDL and moves left flags
+  bool wdl_ = false;
+  bool moves_left_ = false;
+};
+
+template <typename DataType>
+SyclNetwork<DataType>::SyclNetwork(const WeightsFile& weights, const OptionsDict& options)
+    : capabilities_{weights.format().network_format().input(),
+                    weights.format().network_format().output(),
+                    weights.format().network_format().moves_left()} {
+  // Suppress unused parameter warning
+  (void)options;
+
+  // Initialize SYCL queue with GPU selector
+  try {
+    queue_ = sycl::queue(sycl::gpu_selector_v, sycl::property_list{sycl::property::queue::in_order()});
+
+    auto device = queue_.get_device();
+    std::cout << "SYCL Backend Initialized:" << std::endl;
+    std::cout << "  Device: " << device.get_info<sycl::info::device::name>() << std::endl;
+    std::cout << "  Vendor: " << device.get_info<sycl::info::device::vendor>() << std::endl;
+    std::cout << "  Platform: " << device.get_platform().get_info<sycl::info::platform::name>() << std::endl;
+    std::cout << "  Max Compute Units: " << device.get_info<sycl::info::device::max_compute_units>() << std::endl;
+    std::cout << "  Global Memory: " << device.get_info<sycl::info::device::global_mem_size>() / (1024*1024) << " MB" << std::endl;
+  } catch (const sycl::exception& e) {
+    std::cerr << "Failed to initialize SYCL GPU queue: " << e.what() << std::endl;
+    throw;
+  }
+
+  // Initialize network
+  Initialize(weights);
+}
+
+template <typename DataType>
+SyclNetwork<DataType>::~SyclNetwork() {
+  if (device_scratch_) {
+    sycl::free(device_scratch_, queue_.get_context());
+  }
+}
+
+template <typename DataType>
+void SyclNetwork<DataType>::Initialize(const WeightsFile& weights) {
+  // Set WDL and moves left flags based on network format
+  wdl_ = weights.format().network_format().value() ==
+         pblczero::NetworkFormat::VALUE_WDL;
+  moves_left_ = weights.format().network_format().moves_left() ==
+                pblczero::NetworkFormat::MOVES_LEFT_V1;
+
+  // Calculate required memory
+  // TODO: Calculate based on network architecture
+  (void)weights; // Suppress unused variable warning for now
+
+  // Allocate scratch memory
+  scratch_size_ = 1024 * 1024 * 100; // 100MB placeholder
+  device_scratch_ = sycl::malloc_device(scratch_size_, queue_.get_device(), queue_.get_context());
+
+  if (!device_scratch_) {
+    throw Exception("SYCL network failed to allocate device memory");
+  }
+
+  // Load weights and create network layers
+  // LoadWeights(network_weights.multi_head());
+
+  // Initialize input/output buffers
+  // TODO: Set proper sizes based on network architecture
+  input_.resize(1024);
+  output_.resize(1024);
+}
+
+template <typename DataType>
+void SyclNetwork<DataType>::AddInput(InputPlanes& input) {
+  // Convert input planes to tensor format
+  // TODO: Implement based on CUDA version
+  (void)input; // Suppress unused parameter warning
+}
+
+template <typename DataType>
+void SyclNetwork<DataType>::Eval(int batch_size) {
+  // Network evaluation
+  // TODO: Implement based on CUDA version
+  (void)batch_size; // Suppress unused parameter warning
+}
+
+template <typename DataType>
+void SyclNetwork<DataType>::LoadWeights(const MultiHeadWeights& weights) {
+  // Load weights from CPU to GPU memory
+  // TODO: Implement based on CUDA version including all layers:
+  // - Input embedding
+  // - Encoder blocks
+  // - Policy head
+  // - Value head
+  (void)weights; // Suppress unused parameter warning
+}
+
+template <typename DataType>
+std::string SyclNetwork<DataType>::GetDeviceString() const {
+  auto device = queue_.get_device();
+  return device.get_info<sycl::info::device::name>();
+}
+
+template <typename DataType>
+const NetworkCapabilities& SyclNetwork<DataType>::GetCapabilities() const {
+  return capabilities_;
+}
+
+template <typename DataType>
+std::unique_ptr<NetworkComputation> SyclNetwork<DataType>::NewComputation() {
+  // Return a proper SYCL NetworkComputation object with correct flags
+  return std::make_unique<SyclNetworkComputation<DataType>>(this, wdl_, moves_left_);
+}
+
+// Factory registration
+std::unique_ptr<Network> MakeSyclNetwork(const std::optional<WeightsFile>& w, const OptionsDict& options) {
+  if (!w) {
+    throw Exception("The sycl backend requires a network file.");
+  }
+  const WeightsFile& weights = *w;
+  const bool use_fp16 = options.GetOrDefault<bool>("use_fp16", false);
+
+  if (use_fp16) {
+    return std::make_unique<SyclNetwork<sycl::half>>(weights, options);
+  } else {
+    return std::make_unique<SyclNetwork<float>>(weights, options);
+  }
+}
+
+// Network factory registration
+REGISTER_NETWORK("sycl", MakeSyclNetwork, 130L);
+
+}  // namespace lczero

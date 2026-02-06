@@ -26,9 +26,12 @@
 
 #pragma once
 
-#include <CL/sycl.hpp>
+#include <sycl/sycl.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <cmath>
+
+#include "neural/tables/activation_function.h"
 
 #if defined(__INTEL_LLVM_COMPILER) || defined(__LIBSYCL_MAJOR_VERSION)
 // Intel-specific headers for FP16 and extended features
@@ -69,16 +72,19 @@ static constexpr int kOptimalWorkGroupSize = 128; // Balance occupancy and perfo
 inline int getOptimalWorkGroupSize(const sycl::queue& queue) {
   auto device = queue.get_device();
   auto max_wg_size = device.get_info<sycl::info::device::max_work_group_size>();
-  return std::min(max_wg_size, kOptimalWorkGroupSize);
+  return static_cast<int>(std::min(max_wg_size, static_cast<size_t>(kOptimalWorkGroupSize)));
 }
 
 // Helper function to get subgroup size
 inline int getSubGroupSize(const sycl::queue& queue) {
   auto device = queue.get_device();
-  if (device.has_extension(sycl::ext::oneapi::sub_group::all())) {
+  // Modern SYCL uses sub_group() function directly
+  try {
     return device.get_info<sycl::info::device::sub_group_sizes>().back();
+  } catch (...) {
+    // Fallback for devices that don't support sub-group size query
+    return kSubGroupSize;  // Default for Intel GPUs
   }
-  return kSubGroupSize;  // Default for Intel GPUs
 }
 
 // Create a SYCL queue with appropriate selector
@@ -88,7 +94,7 @@ inline sycl::queue createOptimizedQueue() {
 
   try {
     // Try Intel GPU
-    target_device = sycl::device(sycl::gpu_selector{});
+    target_device = sycl::device(sycl::gpu_selector_v);
     // Check if it's an Intel GPU
     if (target_device.get_info<sycl::info::device::vendor>().find("Intel") == std::string::npos) {
       throw std::runtime_error("Not Intel GPU");
@@ -96,10 +102,10 @@ inline sycl::queue createOptimizedQueue() {
   } catch (...) {
     try {
       // Fall back to any GPU
-      target_device = sycl::device(sycl::gpu_selector{});
+      target_device = sycl::device(sycl::gpu_selector_v);
     } catch (...) {
       // Fall back to CPU
-      target_device = sycl::device(sycl::cpu_selector{});
+      target_device = sycl::device(sycl::cpu_selector_v);
     }
   }
 
@@ -109,6 +115,32 @@ inline sycl::queue createOptimizedQueue() {
   };
 
   return sycl::queue(target_device, props);
+}
+
+// Convenience functions for SYCL queue management
+inline sycl::queue& sycl_default_queue() {
+  static sycl::queue queue = createOptimizedQueue();
+  return queue;
+}
+
+// LC0 network constants
+static constexpr int kInputPlanes = 112;
+static constexpr int kNumOutputPolicy = 1858;
+
+// Activation function helpers
+inline float apply_activation(float x, int activation) {
+  switch(activation) {
+    case ACTIVATION_RELU:
+      return x > 0.0f ? x : 0.0f;
+    case ACTIVATION_TANH:
+      return std::tanh(x);
+    case ACTIVATION_SIGMOID:
+      return 1.0f / (1.0f + std::exp(-x));
+    case ACTIVATION_SWISH:
+      return x / (1.0f + std::exp(-x)); // Re-approximation
+    default:
+      return x; // ACTIVATION_NONE or ACTIVATION_DEFAULT
+  }
 }
 
 }  // namespace sycl_backend

@@ -62,7 +62,6 @@ struct SyclGraphExec {
 
   void Launch(sycl::queue& queue) {
     // SYCL graph launch
-    (void)queue; // Suppress unused parameter warning
   }
   bool valid_ = false;
 };
@@ -72,45 +71,43 @@ struct InputsOutputs {
   InputsOutputs(unsigned maxBatchSize, bool wdl, bool moves_left,
                 size_t tensor_mem_size = 0, size_t scratch_size = 0,
                 bool cublasDisableTensorCores = false) {
-    (void)cublasDisableTensorCores; // Suppress unused parameter warning
     // SYCL memory allocation
     auto queue = sycl_default_queue();
-    auto context = queue.get_context();
-    auto device = queue.get_device();
+    auto context = sycl::get_default_context();
 
     // Input masks
     input_masks_mem_ = static_cast<uint64_t*>(sycl::malloc_host(maxBatchSize * kInputPlanes * sizeof(uint64_t), context));
-    input_masks_mem_gpu_ = static_cast<uint64_t*>(sycl::malloc_device(maxBatchSize * kInputPlanes * sizeof(uint64_t), device, context));
+    input_masks_mem_gpu_ = static_cast<uint64_t*>(sycl::malloc_device(maxBatchSize * kInputPlanes * sizeof(uint64_t), context));
 
     // Input values
     input_val_mem_ = static_cast<DataType*>(sycl::malloc_host(maxBatchSize * kInputPlanes * sizeof(DataType), context));
-    input_val_mem_gpu_ = static_cast<DataType*>(sycl::malloc_device(maxBatchSize * kInputPlanes * sizeof(DataType), device, context));
+    input_val_mem_gpu_ = static_cast<DataType*>(sycl::malloc_device(maxBatchSize * kInputPlanes * sizeof(DataType), context));
 
     // Output policy
     op_policy_mem_ = static_cast<DataType*>(sycl::malloc_host(maxBatchSize * kNumOutputPolicy * sizeof(DataType), context));
-    op_policy_mem_gpu_ = static_cast<DataType*>(sycl::malloc_device(maxBatchSize * kNumOutputPolicy * sizeof(DataType), device, context));
+    op_policy_mem_gpu_ = static_cast<DataType*>(sycl::malloc_device(maxBatchSize * kNumOutputPolicy * sizeof(DataType), context));
 
     // Output value
     op_value_mem_ = static_cast<DataType*>(sycl::malloc_host(maxBatchSize * (wdl ? 3 : 1) * sizeof(DataType), context));
-    op_value_mem_gpu_ = static_cast<DataType*>(sycl::malloc_device(maxBatchSize * (wdl ? 3 : 1) * sizeof(DataType), device, context));
+    op_value_mem_gpu_ = static_cast<DataType*>(sycl::malloc_device(maxBatchSize * (wdl ? 3 : 1) * sizeof(DataType), context));
 
     // Moves left if needed
     if (moves_left) {
       op_moves_left_mem_ = static_cast<DataType*>(sycl::malloc_host(maxBatchSize * sizeof(DataType), context));
-      op_moves_left_mem_gpu_ = static_cast<DataType*>(sycl::malloc_device(maxBatchSize * sizeof(DataType), device, context));
+      op_moves_left_mem_gpu_ = static_cast<DataType*>(sycl::malloc_device(maxBatchSize * sizeof(DataType), context));
     }
 
     // Additional memory if needed
     if (tensor_mem_size) {
-      tensor_mem_[0] = sycl::malloc_device(tensor_mem_size, device, context);
-      tensor_mem_[1] = sycl::malloc_device(tensor_mem_size, device, context);
-      tensor_mem_[2] = sycl::malloc_device(tensor_mem_size, device, context);
-      scratch_mem_ = sycl::malloc_device(scratch_size, device, context);
+      tensor_mem_[0] = sycl::malloc_device(tensor_mem_size, context);
+      tensor_mem_[1] = sycl::malloc_device(tensor_mem_size, context);
+      tensor_mem_[2] = sycl::malloc_device(tensor_mem_size, context);
+      scratch_mem_ = sycl::malloc_device(scratch_size, context);
     }
   }
 
   ~InputsOutputs() {
-    auto context = sycl_default_queue().get_context();
+    auto context = sycl::get_default_context();
 
     sycl::free(input_masks_mem_, context);
     sycl::free(input_masks_mem_gpu_, context);
@@ -197,7 +194,6 @@ template <typename DataType>
 inline SyclGraphExec<DataType>& SyclGraphExec<DataType>::operator=(
     const SyclGraphCapture<DataType>& graph) {
   // SYCL graph instantiation
-  (void)graph; // Suppress unused parameter warning
   valid_ = true;
   return *this;
 }

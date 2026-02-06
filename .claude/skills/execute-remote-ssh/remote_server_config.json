@@ -16,7 +16,7 @@
     "host": "172.16.114.168",
     "port": 2232,
     "user": "root",
-    "key_file": "~/.ssh/id_rsa",
+    "key_file": "/home/kurt/.ssh/id_rsa",
     "remote_workspace": "/intel/kurt",
     "local_project_dir": "./sycl",
     "local_results_dir": "./results/sycl_results",

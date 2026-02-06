@@ -104,18 +104,21 @@ inline void atomic_max_float(Acc acc, float val) {
   // SYCL doesn't have direct atomic max for float, need to use integer operations
   // This mirrors the CUDA implementation
   using int_type = int;
-  sycl::atomic<int_type> atomic_int(*reinterpret_cast<int_type*>(acc.get_pointer()));
+  sycl::atomic_ref<int_type, sycl::memory_order::relaxed,
+                   sycl::memory_scope::work_group,
+                   sycl::access::address_space::local_space> atomic_int(*reinterpret_cast<int_type*>(acc.get_pointer()));
 
   if (!sycl::signbit(val)) {
     // For positive values
     int_type int_val = *reinterpret_cast<const int_type*>(&val);
-    sycl::atomic<bool> atomic_float(*reinterpret_cast<bool*>(acc.get_pointer()));
-    sycl::atomic_fetch_max(atomic_int, int_val);
+    atomic_int.fetch_max(int_val);
   } else {
     // For negative values (need min operation)
     unsigned int int_val = *reinterpret_cast<const unsigned int*>(&val);
-    sycl::atomic<unsigned int> atomic_uint(*reinterpret_cast<unsigned int*>(acc.get_pointer()));
-    sycl::atomic_fetch_min(atomic_uint, int_val);
+    sycl::atomic_ref<unsigned int, sycl::memory_order::relaxed,
+                      sycl::memory_scope::work_group,
+                      sycl::access::address_space::local_space> atomic_uint(*reinterpret_cast<unsigned int*>(acc.get_pointer()));
+    atomic_uint.fetch_min(int_val);
   }
 }
 
@@ -127,8 +130,8 @@ inline T load_value(const T* ptr, size_t index) {
 
 // Specialization for FP16 vectorized loads
 inline sycl::half2 load_half2(const sycl::half* ptr, size_t index) {
-  // SYCL half2 equivalent
-  auto val = sycl::vec<sycl::half, 2>::load(0, ptr + index);
+  // SYCL half2 equivalent - manually construct half2 from two half values
+  auto val = sycl::vec<sycl::half, 2>(ptr[index], ptr[index + 1]);
   return val;
 }
 
@@ -210,7 +213,7 @@ inline T subgroup_shuffle_xor(Group sg, T val, int mask) {
 template <typename T>
 [[intel::max_global_work_dim(1)]] // Typically 1D work-items for best vectorization
 [[intel::num_simd_work_items(16)]] // Request SIMD width of 16 for Intel GPUs
-[[intel::reqd_sub_group_size(16)]] // Force subgroup size of 16
+[[sycl::reqd_sub_group_size(16)]] // Force subgroup size of 16
 inline void intel_optimized_mem_rd(const T* src, const size_t offset, T* dst) {
   dst[0] = src[offset];
 }
